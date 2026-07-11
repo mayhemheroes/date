@@ -1,0 +1,9 @@
+project: date
+target: date_fuzzer
+cmds:
+  - cmd: /mayhem/date_fuzzer
+    libfuzzer: true
+    dictionary: /mayhem/mayhem/date_fuzzer.dict
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/date_fuzzer/testsuite
