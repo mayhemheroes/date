@@ -6536,13 +6536,13 @@ read(std::basic_istream<CharT, Traits>& is, int a0, Args&& ...args)
 //    which is already enforced by std::ratio.
 template <class Duration, class CharT, class Traits>
 Duration
-read_seconds(std::basic_istream<CharT, Traits>& is, unsigned m, unsigned M)
+read_seconds(std::basic_istream<CharT, Traits>& is, unsigned const m, unsigned const M)
 {
     using Rep = typename Duration::rep;
 #if ONLY_C_LOCALE
-    typename Traits::int_type decimal_point = '.';
+    typename Traits::int_type const decimal_point = '.';
 #else
-    auto decimal_point = Traits::to_int_type(
+    auto const decimal_point = Traits::to_int_type(
         std::use_facet<std::numpunct<CharT>>(is.getloc()).decimal_point());
 #endif
     unsigned count = 0;
@@ -6553,17 +6553,16 @@ read_seconds(std::basic_istream<CharT, Traits>& is, unsigned m, unsigned M)
     bool parsing_fraction = false;
     while (true)
     {
-        auto ic = is.peek();
+        auto const ic = is.peek();
         if (Traits::eq_int_type(ic, Traits::eof()))
             break;
-        if (Traits::eq_int_type(ic, decimal_point))
+        if (!parsing_fraction && Traits::eq_int_type(ic, decimal_point))
         {
-            decimal_point = Traits::eof();
             parsing_fraction = true;
         }
         else
         {
-            auto c = static_cast<char>(Traits::to_char_type(ic));
+            auto const c = static_cast<char>(Traits::to_char_type(ic));
             if (!('0' <= c && c <= '9'))
                 break;
             if (!parsing_fraction)
@@ -6581,54 +6580,53 @@ read_seconds(std::basic_istream<CharT, Traits>& is, unsigned m, unsigned M)
         if (++count == M)
             break;
     }
-    if (icount + fcount < m)
+    if (icount + fcount >= m)
     {
-        is.setstate(std::ios::failbit);
-        return Duration{};
-    }
-    std::chrono::duration<Rep> di{i};
-    switch (fcount)
-    {
-        using std::chrono::duration;
-        using std::ratio;
-    case 0:
-        return round_i<Duration>(di);
-    case 1:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 10>>{f});
-    case 2:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 100>>{f});
-    case 3:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 1'000>>{f});
-    case 4:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 10'000>>{f});
-    case 5:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 100'000>>{f});
-    case 6:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 1'000'000>>{f});
-    case 7:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 10'000'000>>{f});
-    case 8:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 100'000'000>>{f});
-    case 9:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 1'000'000'000>>{f});
-    case 10:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 10'000'000'000>>{f});
-    case 11:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 100'000'000'000>>{f});
-    case 12:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 1'000'000'000'000>>{f});
-    case 13:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 10'000'000'000'000>>{f});
-    case 14:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 100'000'000'000'000>>{f});
-    case 15:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 1'000'000'000'000'000>>{f});
-    case 16:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 10'000'000'000'000'000>>{f});
-    case 17:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 100'000'000'000'000'000>>{f});
-    case 18:
-        return round_i<Duration>(di + duration<Rep, ratio<1, 1'000'000'000'000'000'000>>{f});
+        std::chrono::duration<Rep> const di{i};
+        switch (fcount)
+        {
+            using std::chrono::duration;
+            using std::ratio;
+            using D = Duration;
+        case 0:
+            return round_i<D>(di);
+        case 1:
+            return round_i<D>(di + duration<Rep, ratio<1, 10>>{f});
+        case 2:
+            return round_i<D>(di + duration<Rep, ratio<1, 100>>{f});
+        case 3:
+            return round_i<D>(di + duration<Rep, ratio<1, 1'000>>{f});
+        case 4:
+            return round_i<D>(di + duration<Rep, ratio<1, 10'000>>{f});
+        case 5:
+            return round_i<D>(di + duration<Rep, ratio<1, 100'000>>{f});
+        case 6:
+            return round_i<D>(di + duration<Rep, ratio<1, 1'000'000>>{f});
+        case 7:
+            return round_i<D>(di + duration<Rep, ratio<1, 10'000'000>>{f});
+        case 8:
+            return round_i<D>(di + duration<Rep, ratio<1, 100'000'000>>{f});
+        case 9:
+            return round_i<D>(di + duration<Rep, ratio<1, 1'000'000'000>>{f});
+        case 10:
+            return round_i<D>(di + duration<Rep, ratio<1, 10'000'000'000>>{f});
+        case 11:
+            return round_i<D>(di + duration<Rep, ratio<1, 100'000'000'000>>{f});
+        case 12:
+            return round_i<D>(di + duration<Rep, ratio<1, 1'000'000'000'000>>{f});
+        case 13:
+            return round_i<D>(di + duration<Rep, ratio<1, 10'000'000'000'000>>{f});
+        case 14:
+            return round_i<D>(di + duration<Rep, ratio<1, 100'000'000'000'000>>{f});
+        case 15:
+            return round_i<D>(di + duration<Rep, ratio<1, 1'000'000'000'000'000>>{f});
+        case 16:
+            return round_i<D>(di + duration<Rep, ratio<1, 10'000'000'000'000'000>>{f});
+        case 17:
+            return round_i<D>(di + duration<Rep, ratio<1, 100'000'000'000'000'000>>{f});
+        case 18:
+            return round_i<D>(di + duration<Rep, ratio<1, 1'000'000'000'000'000'000>>{f});
+        }
     }
     is.setstate(std::ios::failbit);
     return Duration{};
