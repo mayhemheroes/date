@@ -36,6 +36,7 @@ option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF 
 option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
 option( ENABLE_DATE_TESTING "Enable unit tests" OFF )
 option( DISABLE_STRING_VIEW "Disable string view" OFF )
+option( DISABLE_TM_ZONE "Disable support for tm::tm_zone extension" OFF )
 option( COMPILE_WITH_C_LOCALE "define ONLY_C_LOCALE=1" OFF )
 option( BUILD_TZ_LIB "build/install of TZ library" OFF )
 option( ENABLE_DATE_INSTALL "Enable install" ON )
@@ -121,6 +122,10 @@ else()
 endif()
 if ( DISABLE_STRING_VIEW )
   target_compile_definitions( date INTERFACE HAS_STRING_VIEW=0 HAS_DEDUCTION_GUIDES=0 )
+endif()
+
+if ( DISABLE_TM_ZONE )
+  target_compile_definitions( date INTERFACE HAS_TM_ZONE=0 )
 endif()
 
 #[===================================================================[

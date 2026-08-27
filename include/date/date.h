@@ -157,6 +157,14 @@ namespace date
 #  endif
 #endif  // HAS_VOID_T
 
+#ifndef HAS_TM_ZONE
+#  if defined(__GLIBC__) || defined(__ANDROID__) || (defined(__GNUC__) && __GNUC__ > 4)
+#    define HAS_TM_ZONE 1
+#  else
+#    define HAS_TM_ZONE 0
+#  endif
+#endif  // HAS_TM_ZONE
+
 // Protect from Oracle sun macro
 #ifdef sun
 #  undef sun
@@ -5159,6 +5167,16 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     if (os.fail())
                         return os;
                     tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
+                    // Some locales will include the time zone in the combined date-time format.
+                    // POSIX includes an extension to the tm struct we can use to pass that information.
+                    // Some platforms will ignore this, and like non-POSIX platforms, they will likely
+                    // fall back to displaying the system time zone. This will not be correct, but
+                    // short of overriding the system time zone temporarilly, we cannot fix this.
+                    // This is better handled in C++20 std::chrono.
+#  if HAS_TM_ZONE
+                    tm.tm_zone = abbrev != nullptr ? abbrev->c_str() : nullptr;
+                    tm.tm_gmtoff = offset_sec != nullptr ? static_cast<int>(offset_sec->count()) : 0;
+#  endif
                     CharT f[3] = {'%'};
                     auto fe = std::begin(f) + 1;
                     if (modified == CharT{'E'})
@@ -5939,6 +5957,11 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
                     tm.tm_sec = static_cast<int>(fds.tod.seconds().count());
                     tm.tm_min = static_cast<int>(fds.tod.minutes().count());
                     tm.tm_hour = static_cast<int>(fds.tod.hours().count());
+                    // See comment in %c and %x formats.
+#  if HAS_TM_ZONE
+                    tm.tm_zone = abbrev != nullptr ? abbrev->c_str() : nullptr;
+                    tm.tm_gmtoff = offset_sec != nullptr ? static_cast<int>(offset_sec->count()) : 0;
+#  endif
                     CharT f[3] = {'%'};
                     auto fe = std::begin(f) + 1;
                     if (modified == CharT{'E'})
